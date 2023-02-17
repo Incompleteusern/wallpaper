@@ -99,40 +99,44 @@ def find_file():
     OWM_API_KEY = os.getenv("OWM_API_KEY")
     if OWM_API_KEY == None:
         print("Could not find api key, using default wallpaper")
-        return default_file
+        return default_file, True
 
     try:
         location = lat_long()
     except Exception as e:
         print(f"Exception while finding location, using default wallpaper: {e}")
-        return default_file
+        return default_file, True
 
     if (location is None):
         print("Timed out while finding location, using default wallpaper")
-        return default_file
+        return default_file, True
 
     x = requests.get(f'https://api.openweathermap.org/data/2.5/weather?lat={location[0]}&lon={location[1]}&appid={OWM_API_KEY}')
     if x.status_code != 200:
         print("Failed to fetch weather information, using default wallpaper")
-        return default_file
+        return default_file, True
 
     try:
         weather, when = conditions(x.json())
     except Exception as e:
         print(f"Exception while parsing api response, using default wallpaper: {e}")
-        return default_file
+        return default_file, True
 
     if not check_new(weather, when):
         print("Conditions have not changed since last check, keeping wall paper the same")
-        return None
+        return None, False
 
     # choose random file
     chosen = choose_img_file(os.path.join(source_dir, "wallpapers", weather, when), default_file)
     
-    return chosen
+    return chosen, False
 
+img_file, overwrite = find_file()
 
-img_file = find_file()
+if overwrite:
+    with open('/tmp/last_wallpaper_conditions', 'w') as f:
+        f.write("Failed")
+        print (f"Writing result to file")
 
 if img_file != None: # hacky way to not change :)
     try:
