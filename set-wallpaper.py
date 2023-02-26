@@ -110,7 +110,8 @@ def find_file():
     if (location is None):
         print("Timed out while finding location, using default wallpaper")
         return default_file, True
-
+    
+    print(f"Location is at {location[0]}, {location[1]}")
     x = requests.get(f'https://api.openweathermap.org/data/2.5/weather?lat={location[0]}&lon={location[1]}&appid={OWM_API_KEY}')
     if x.status_code != 200:
         print("Failed to fetch weather information, using default wallpaper")
